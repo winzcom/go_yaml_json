@@ -28,7 +28,8 @@ spec:
               - key: app
                 operator: In
                 values:
-                - nginx: ls
+                - nginx
+              - key: opp
             topologyKey: "kubernetes.io/hostname"
       containers:
       - name: nginx-container
