@@ -47,6 +47,7 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 	var is_array bool
 	var new_array_start bool
 	var array_key string
+	var array_keys []string
 	var is_value_now bool
 	//var previous string
 
@@ -54,10 +55,15 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 		b, err := reader.ReadByte()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				// if key_name != "" && last_record != "" {
-				// 	current := findCurrent(depth, tracker)
-				// 	tracker[current][last_record] = key_name
-				// }
+				if key_name != "" && last_record != "" {
+					current := findCurrent(depth, tracker)
+					if reflect.TypeOf(tracker[current]).Kind() != reflect.Slice {
+						tracker[current].(JSON)[strings.TrimSpace(last_record)] = key_name
+					} else {
+						last := tracker[current].([]JSON)[len(tracker[current].([]JSON))-1]
+						last[strings.TrimSpace(last_record)] = key_name
+					}
+				}
 				break
 			}
 			log.Fatal("Failed to read YAML doc")
@@ -72,9 +78,6 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 			}
 			//ldepth = depth
 			parent := tracker[current]
-
-			//fmt.Println("adacad ", current, depth, key_name, array_key, tracker[depth])
-
 			is_array = reflect.TypeOf(parent).Kind() == reflect.Slice
 			parent_p := findCurrent(current, tracker)
 
@@ -106,7 +109,12 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 						}
 
 					} else {
-						//fmt.Println("wahy the rrror ", tracker[current].([]JSON), array_key, last_record, current, depth)
+						for _, v := range array_keys {
+							array_key = v
+							if tracker[parent_p].(JSON)[array_key] != nil {
+								break
+							}
+						}
 						if len(tracker[parent_p].(JSON)[array_key].([]JSON)) == 0 || new_array_start {
 							tracker[parent_p].(JSON)[array_key] = append(tracker[parent_p].(JSON)[array_key].([]JSON), JSON{
 								strings.TrimSpace(last_record): key_name,
@@ -129,9 +137,16 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 				tracker[depth] = new_map
 				if is_array {
 					//parent_p := findCurrent(current, tracker)
-					cur := tracker[current].([]JSON)[len(tracker[current].([]JSON))-1]
-					cur[strings.TrimSpace(last_record)] = tracker[depth]
-
+					if len(tracker[current].([]JSON)) > 0 {
+						cur := tracker[current].([]JSON)[len(tracker[current].([]JSON))-1]
+						cur[strings.TrimSpace(last_record)] = tracker[depth]
+					} else {
+						tracker[current] = append(tracker[current].([]JSON), JSON{
+							strings.TrimSpace(last_record): tracker[depth],
+						})
+						//fmt.Println("whast asdad ", tracker[parent_p])
+						tracker[parent_p].(JSON)[array_key] = tracker[current]
+					}
 				} else {
 					parent.(JSON)[strings.TrimSpace(last_record)] = tracker[depth]
 				}
@@ -156,6 +171,7 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 				current := findCurrent(depth, tracker)
 				parent_cur := findCurrent(current, tracker)
 				array_key = last_key
+				array_keys = append(array_keys, array_key)
 				//fmt.Println("though ", tracker[parent_cur], tracker[current], last_key)
 				cur_obj := tracker[parent_cur]
 				new_array := make([]JSON, 0)
@@ -167,10 +183,15 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 						}
 					} else {
 						item := cur_obj.([]JSON)[len(cur_obj.([]JSON))-1]
-						if reflect.TypeOf(item[array_key]).Kind() != reflect.Slice {
+						if item[array_key] != nil {
+							if reflect.TypeOf(item[strings.TrimSpace(array_key)]).Kind() != reflect.Slice {
+								item[array_key] = new_array
+
+							}
+						} else {
 							item[array_key] = new_array
-							tracker[current] = item[array_key]
 						}
+						tracker[current] = item[array_key]
 					}
 				}
 				continue
