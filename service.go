@@ -87,6 +87,8 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 				is_parent_parent_array = reflect.TypeOf(tracker[parent_p]).Kind() == reflect.Slice
 			}
 
+			key_name = strings.TrimSpace(key_name)
+
 			if key_name != "" {
 				if is_array {
 					if is_parent_parent_array {
@@ -139,11 +141,21 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 					//parent_p := findCurrent(current, tracker)
 					if len(tracker[current].([]JSON)) > 0 {
 						cur := tracker[current].([]JSON)[len(tracker[current].([]JSON))-1]
-						cur[strings.TrimSpace(last_record)] = tracker[depth]
+						if is_value_now {
+							cur[strings.TrimSpace(last_record)] = tracker[depth]
+						} else {
+							cur[strings.TrimSpace(last_record)] = strings.TrimSpace(last_record)
+						}
 					} else {
-						tracker[current] = append(tracker[current].([]JSON), JSON{
-							strings.TrimSpace(last_record): tracker[depth],
-						})
+						if is_value_now {
+							tracker[current] = append(tracker[current].([]JSON), JSON{
+								strings.TrimSpace(last_record): tracker[depth],
+							})
+						} else {
+							tracker[current] = append(tracker[current].([]JSON), JSON{
+								strings.TrimSpace(last_record): strings.TrimSpace(last_record),
+							})
+						}
 						//fmt.Println("whast asdad ", tracker[parent_p])
 						tracker[parent_p].(JSON)[array_key] = tracker[current]
 					}

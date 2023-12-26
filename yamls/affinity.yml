@@ -20,7 +20,7 @@ spec:
               - key: node-type
                 operator: In
                 values:
-                - nginx-node: ls
+                - nginx-node
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
