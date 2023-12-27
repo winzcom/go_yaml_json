@@ -61,6 +61,9 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 					current := findCurrent(depth, tracker)
 					parent_p := findCurrent(current, tracker)
 
+					if tracker[parent_p] == nil {
+						return nil
+					}
 					parent_is_array := reflect.TypeOf(tracker[parent_p]).Kind() == reflect.Slice
 
 					fmt.Println("current ", tracker[current])
