@@ -163,9 +163,6 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 						// 		break
 						// 	}
 						// }
-						if strings.TrimSpace(key_name) == "shared-data" {
-							fmt.Println("dasd ", depth, is_array, tracker[parent_p].(JSON)[array_key])
-						}
 						if len(tracker[parent_p].(JSON)[array_key].([]JSON)) == 0 || new_array_start {
 							tracker[parent_p].(JSON)[array_key] = append(tracker[parent_p].(JSON)[array_key].([]JSON), JSON{
 								strings.TrimSpace(last_record): key_name,

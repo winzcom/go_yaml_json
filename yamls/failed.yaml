@@ -30,3 +30,5 @@ spec:
   volumes:
   - name: shared-data
     emptyDir: {}
+  - name: shared-data
+    emptyDir: {}
