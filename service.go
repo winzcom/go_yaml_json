@@ -23,6 +23,7 @@ func findCurrent(depth int, tracker TRACKER) int {
 	for tracker[current] == nil && current > -1 {
 		current -= 1
 	}
+	//fmt.Println("reading current and tracker ", tracker, current, depth)
 	return current
 }
 
@@ -60,6 +61,8 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 				if key_name != "" || last_record != "" {
 					current := findCurrent(depth, tracker)
 					parent_p := findCurrent(current, tracker)
+
+					// fmt.Println("after end of file ", current, parent_p, tracker[current])
 
 					if tracker[parent_p] == nil {
 						return nil
@@ -146,11 +149,22 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 						}
 
 					} else {
-						for _, v := range array_keys {
-							array_key = v
+
+						arr_key_len := len(array_keys) - 1
+						for i := arr_key_len; i >= 0; i -= 1 {
+							array_key = array_keys[i]
 							if tracker[parent_p].(JSON)[array_key] != nil {
 								break
 							}
+						}
+						// for _, v := range array_keys {
+						// 	array_key = v
+						// 	if tracker[parent_p].(JSON)[array_key] != nil {
+						// 		break
+						// 	}
+						// }
+						if strings.TrimSpace(key_name) == "shared-data" {
+							fmt.Println("dasd ", depth, is_array, tracker[parent_p].(JSON)[array_key])
 						}
 						if len(tracker[parent_p].(JSON)[array_key].([]JSON)) == 0 || new_array_start {
 							tracker[parent_p].(JSON)[array_key] = append(tracker[parent_p].(JSON)[array_key].([]JSON), JSON{
@@ -172,7 +186,7 @@ func ReadYAML(reader *bufio.Reader, tracker TRACKER) *JSON {
 					parent.(JSON)[strings.TrimSpace(key)] = key_name
 				}
 				//fmt.Println("parent ", parent)
-			} else {
+			} else if last_record != "" {
 				last_key = strings.TrimSpace(last_record)
 				new_map := make(JSON)
 				tracker[depth] = new_map

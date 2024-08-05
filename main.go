@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	file, _ := os.Open("./yamls/s.yaml")
+	file, _ := os.Open("./yamls/failed.yaml")
 
 	bfr := bufio.NewReader(file)
 
